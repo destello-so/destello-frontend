@@ -19,6 +19,7 @@ import {
 } from 'react-icons/fi';
 import { useWishlistStore } from '../store/wishlistStore';
 import type { Product } from '../types/product.types';
+import { useCart } from '../hooks/useCart';
 
 export default function Wishlist() {
   const { products, loading, error, loadWishlist, removeFromWishlist } = useWishlistStore();
@@ -289,6 +290,7 @@ function ProductCard({ product, index, onClick, onRemoveFromWishlist }: {
   onClick: () => void;
   onRemoveFromWishlist: () => void;
 }) {
+  const { addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -326,7 +328,7 @@ function ProductCard({ product, index, onClick, onRemoveFromWishlist }: {
     
     try {
       setAddingToCart(true);
-      // Aquí iría la lógica del carrito
+      await addToCart(product._id, 1); // Assuming quantity is 1
       showToast('success', '¡Producto agregado al carrito! 🛒');
     } catch (error) {
       console.error('Error adding to cart:', error);
