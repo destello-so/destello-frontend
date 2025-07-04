@@ -26,11 +26,27 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       if (response.success) {
         let products: Product[] = [];
         if (Array.isArray(response.data)) {
-          // legacy array
-          products = (response.data as any[]).map((item: any) => item.productId).filter(Boolean);
+          // Mapear la estructura del endpoint: data[].productId contiene el producto
+          products = (response.data as any[])
+            .map((item: any) => item.productId)
+            .filter((product: any) => {
+              // Filtrar productos válidos con todas las propiedades necesarias
+              return product && 
+                     product._id && 
+                     product.name && 
+                     typeof product.name === 'string' &&
+                     typeof product.price === 'number';
+            });
         } else if (Array.isArray((response.data as any).products)) {
-          products = (response.data as any).products;
+          products = (response.data as any).products.filter((product: any) => {
+            return product && 
+                   product._id && 
+                   product.name && 
+                   typeof product.name === 'string' &&
+                   typeof product.price === 'number';
+          });
         }
+        console.log('Productos cargados en wishlist:', products);
         set({ products, loading: false });
       } else {
         set({ error: 'Error al cargar wishlist', loading: false, products: [] });

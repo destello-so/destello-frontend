@@ -10,6 +10,9 @@ const ProductosPage = lazy(() => import('./pages/Productos'));
 const CartPage = lazy(() => import('./pages/Cart'));
 const CheckoutPage = lazy(() => import('./pages/Checkout'));
 const MisOrdenesPage = lazy(() => import('./pages/MisOrdenes'));
+const WishlistPage = lazy(() => import('./pages/Wishlist'));
+const CreatePostPage = lazy(() => import('./pages/CreatePost'));
+const DiscoverUsersPage = lazy(() => import('./pages/DiscoverUsers'));
 
 // Componente para rutas protegidas (requieren autenticación)
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -106,14 +109,14 @@ function AppRouter() {
             <Route path="carrito" element={<CartPage />} />
             <Route path="checkout" element={<CheckoutPage />} />
             <Route path="mis-ordenes" element={<MisOrdenesPage />} />
-            <Route path="wishlist" element={<div className="p-8"><h1 className="text-2xl font-bold">Lista de Deseos - Próximamente</h1></div>} />
+            <Route path="wishlist" element={<WishlistPage />} />
             
             {/* Sección Social */}
             <Route path="feed" element={<div className="p-8"><h1 className="text-2xl font-bold">Feed Social - Próximamente</h1></div>} />
-            <Route path="crear-post" element={<div className="p-8"><h1 className="text-2xl font-bold">Crear Post - Próximamente</h1></div>} />
+            <Route path="crear-post" element={<CreatePostPage />} />
             <Route path="mis-seguidores" element={<div className="p-8"><h1 className="text-2xl font-bold">Mis Seguidores - Próximamente</h1></div>} />
             <Route path="siguiendo" element={<div className="p-8"><h1 className="text-2xl font-bold">Siguiendo - Próximamente</h1></div>} />
-            <Route path="descubrir" element={<div className="p-8"><h1 className="text-2xl font-bold">Descubrir - Próximamente</h1></div>} />
+            <Route path="descubrir" element={<DiscoverUsersPage />} />
             
             {/* Sección Personal */}
             <Route path="mi-perfil" element={<div className="p-8"><h1 className="text-2xl font-bold">Mi Perfil - Próximamente</h1></div>} />
