@@ -1,0 +1,437 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- VARIABLES GLOBALES ---------- */
+@layer base {
+  :root {
+    /* Colores principales */
+    --color-primary: #ff70a6;
+    --color-primary-600: #e651a1;
+    --color-primary-rgb: 255, 112, 166;
+    --color-primary-light: #ffa0c9;
+    --color-primary-dark: #d94f85;
+    --color-accent: #ffd1dc;
+
+    /* Colores rosa */
+    --color-rose-300: #fda4af;
+    --color-rose-400: #fb7185;
+    --color-rose-300-rgb: 253, 164, 175;
+
+    /* Colores warm */
+    --color-warm-400: #a8a29e;
+    --color-warm-500: #78716c;
+    --color-warm-600: #57534e;
+    --color-warm-700: #44403c;
+    --color-warm-800: #292524;
+
+    /* Backgrounds suaves */
+    --bg-cream: #fef9f3;
+    --bg-pearl: #f8f4f0;
+    --bg-blush: #fdf2f8;
+    --bg-powder: #f0f8ff;
+
+    /* Gradientes */
+    --gradient-rose: linear-gradient(135deg, #fff1f2 0%, #fce7f3 25%, #f3e8ff 50%, #e0e7ff 75%, #ddd6fe 100%);
+    --gradient-sunset: linear-gradient(135deg, #ff70a6 0%, #ff9a9e 25%, #fecaca 50%, #fbbf24 75%, #f59e0b 100%);
+    --gradient-glow: linear-gradient(135deg, #ff70a6 0%, #a855f7 50%, #3b82f6 100%);
+    --gradient-soft: linear-gradient(45deg, #fdf8f6, #fef7f3);
+
+    /* Sombras y radios */
+    --shadow-soft: 0 2px 15px -3px rgba(255, 112, 166, 0.1),
+                   0 10px 20px -2px rgba(255, 112, 166, 0.04);
+    --shadow-rose: 0 4px 25px -5px rgba(255, 112, 166, 0.2),
+                   0 10px 20px -5px rgba(255, 112, 166, 0.1);
+    --radius-soft: 12px;
+    --radius-gentle: 16px;
+    --radius-bubble: 24px;
+    --transition-base: 0.2s ease-in-out;
+  }
+}
+
+/* ---------- COMPONENTES REUTILIZABLES ---------- */
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-3 rounded-gentle font-medium
+           hover:bg-primary-600 active:scale-95
+           transition-all duration-200 shadow-soft hover:shadow-rose
+           focus:outline-none focus:ring-2 focus:ring-primary-300;
+  }
+
+  .btn-secondary {
+    @apply bg-accent-100 text-primary-700 px-6 py-3 rounded-gentle font-medium
+           hover:bg-accent-200 active:scale-95
+           transition-all duration-200 shadow-card;
+  }
+
+  .card {
+    @apply bg-white rounded-bubble p-6 shadow-soft
+           hover:shadow-rose transition-all duration-300;
+    background: linear-gradient(145deg, #ffffff 0%, var(--bg-cream) 100%);
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-soft border-2 border-rose-200
+           focus:border-primary focus:ring-2 focus:ring-primary-200
+           transition-all duration-200 bg-white/80 placeholder-warm-400;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-sunset {
+    @apply bg-gradient-to-r from-rose-400 via-primary to-accent-400 bg-clip-text text-transparent;
+  }
+
+  // Glassmorphism mejorado para inputs
+  .glass-input {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+    @apply shadow-soft rounded-gentle;
+    @apply hover:bg-white/20 focus:bg-white/20;
+    @apply transition-all duration-300;
+  }
+
+  // Efecto de shimmer para botones
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .shimmer:hover::before {
+    left: 100%;
+  }
+}
+
+/* ---------- UTILIDADES EXTRA ---------- */
+@layer utilities {
+  .hover-lift      { @apply transition-transform duration-200 hover:-translate-y-1; }
+  .hover-glow      { @apply transition-all duration-300 hover:shadow-glow; }
+
+  .scrollbar-rose {
+    scrollbar-width: thin;
+    scrollbar-color: #ff70a6 #fce7f3;
+  }
+  .scrollbar-rose::-webkit-scrollbar        { width: 8px; }
+  .scrollbar-rose::-webkit-scrollbar-track   { @apply bg-rose-100 rounded-full; }
+  .scrollbar-rose::-webkit-scrollbar-thumb   { @apply bg-primary rounded-full; }
+  .scrollbar-rose::-webkit-scrollbar-thumb:hover { @apply bg-primary-600; }
+
+  /* Estilos personalizados para scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thumb-slate-600 {
+    scrollbar-color: rgb(71 85 105) transparent;
+  }
+  
+  .scrollbar-track-transparent {
+    scrollbar-color: transparent transparent;
+  }
+  
+  /* Para navegadores webkit */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(71 85 105 / 0.5);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(71 85 105 / 0.8);
+  }
+
+  /* Scrollbar personalizado para sidebar rosa */
+  .scrollbar-thumb-rose-400\/60::-webkit-scrollbar-thumb {
+    background-color: rgb(251 113 133 / 0.6);
+    border-radius: 9999px;
+  }
+  
+  .scrollbar-track-rose-100\/30::-webkit-scrollbar-track {
+    background-color: rgb(255 228 230 / 0.3);
+    border-radius: 9999px;
+  }
+  
+  .hover\:scrollbar-thumb-rose-500\/80:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(244 63 94 / 0.8);
+  }
+  
+  .scrollbar-w-2::-webkit-scrollbar {
+    width: 8px;
+  }
+}
+
+/* ---------- ESTILOS PARA PRODUCTOS ---------- */
+@layer components {
+  /* Card de producto con efectos liquid glass */
+  .product-card {
+    @apply relative overflow-hidden rounded-3xl backdrop-blur-3xl border border-white/30;
+    @apply bg-white/10 shadow-2xl shadow-rose-500/20 hover:shadow-rose-400/40;
+    @apply transition-all duration-500 cursor-pointer;
+    @apply before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/30 before:via-pink-100/20 before:to-transparent before:rounded-3xl before:backdrop-blur-2xl before:pointer-events-none;
+    @apply after:absolute after:inset-0 after:bg-gradient-to-t after:from-rose-200/20 after:to-transparent after:rounded-3xl after:pointer-events-none;
+  }
+
+  /* Toast messages elegantes */
+  .toast-success {
+    @apply bg-emerald-100/90 border-emerald-300/60 text-emerald-800;
+  }
+  
+  .toast-error {
+    @apply bg-red-100/90 border-red-300/60 text-red-800;
+  }
+
+  /* Enhanced Checkout Styles */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(244, 114, 182, 0.3) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, rgba(244, 114, 182, 0.5), rgba(236, 72, 153, 0.5));
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, rgba(244, 114, 182, 0.7), rgba(236, 72, 153, 0.7));
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    33% {
+      transform: translateY(-10px) rotate(1deg);
+    }
+    66% {
+      transform: translateY(5px) rotate(-1deg);
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  .toast-warning {
+    @apply bg-amber-100/90 border-amber-300/60 text-amber-800;
+  }
+
+  /* Filtros glass */
+  .filter-panel {
+    @apply backdrop-blur-2xl bg-white/20 border border-white/30 rounded-3xl shadow-2xl shadow-rose-500/20;
+  }
+
+  /* Badges de stock */
+  .stock-available {
+    @apply bg-emerald-100/90 border-emerald-300/60 text-emerald-800;
+  }
+  
+  .stock-warning {
+    @apply bg-amber-100/90 border-amber-300/60 text-amber-800;
+  }
+  
+  .stock-danger {
+    @apply bg-red-100/90 border-red-300/60 text-red-800;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+}
+
+/* ---------- UTILIDADES ADICIONALES ---------- */
+@layer utilities {
+  /* Efectos glass mejorados */
+  .glass-intense {
+    @apply backdrop-blur-3xl bg-white/10 border border-white/30;
+  }
+  
+  .glass-subtle {
+    @apply backdrop-blur-xl bg-white/5 border border-white/20;
+  }
+
+  /* Animaciones personalizadas */
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+  
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  /* Efectos de hover específicos */
+  .hover-scale-102:hover {
+    transform: scale(1.02);
+  }
+  
+  .hover-scale-105:hover {
+    transform: scale(1.05);
+  }
+
+  /* Transition personalizadas */
+  .transition-glass {
+    transition: backdrop-filter 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  }
+}
+
+/* ---------- KEYFRAMES ---------- */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+/* Enhanced Checkout Styles */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(244, 114, 182, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, rgba(244, 114, 182, 0.5), rgba(236, 72, 153, 0.5));
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, rgba(244, 114, 182, 0.7), rgba(236, 72, 153, 0.7));
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(-1deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ---------- ESTILOS GLOBALS ---------- */
+* { @apply selection:bg-rose-200 selection:text-primary-800; }
+body { @apply scrollbar-rose; }
+
+/* Mejoras para inputs de rango de precios */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+} 
