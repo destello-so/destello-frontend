@@ -45,13 +45,27 @@ const handleAuthError = (error: unknown): { message: string; type: AuthErrorType
   return { message: 'Error desconocido', type: 'NETWORK_ERROR' };
 };
 
+// 🔧 ARREGLO: Función para determinar el estado inicial basado en el token almacenado
+const getInitialState = (): Pick<AuthState, 'user' | 'token' | 'isAuthenticated' | 'isLoading' | 'error'> => {
+  const storedToken = tokenManager.getToken();
+  const hasValidToken = Boolean(storedToken && tokenManager.isTokenValid(storedToken));
+  
+  console.log('🔍 [getInitialState] Token almacenado:', storedToken ? 'Existe' : 'No existe');
+  console.log('🔍 [getInitialState] ¿Token válido?', hasValidToken);
+  
+  return {
+    user: null,
+    token: null,
+    isAuthenticated: false,
+    // 🚀 CLAVE: Si hay token válido, empezar con isLoading: true para evitar redirecciones prematuras
+    isLoading: hasValidToken,
+    error: null
+  };
+};
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-  // Estado inicial
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  isLoading: false,
-  error: null,
+  // Estado inicial inteligente
+  ...getInitialState(),
 
   // Acción: Login
   login: async (credentials: LoginRequest) => {
@@ -143,6 +157,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     
     if (!storedToken) {
       console.log('❌ [loadUserFromToken] No hay token almacenado, ejecutando logout');
+      set({ isLoading: false }); // 🔧 ARREGLO: Asegurar que isLoading se resetee
       get().logout();
       return;
     }
@@ -153,6 +168,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     
     if (!isTokenValid) {
       console.log('❌ [loadUserFromToken] Token inválido o expirado, ejecutando logout');
+      set({ isLoading: false }); // 🔧 ARREGLO: Asegurar que isLoading se resetee
       get().logout();
       return;
     }
@@ -179,7 +195,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('❌ [loadUserFromToken] Error al obtener perfil:', error);
       // Si falla, eliminar token y hacer logout
-      set({ isLoading: false }); // ✅ ARREGLO: Asegurar que isLoading se resetee
+      set({ isLoading: false }); // 🔧 ARREGLO: Asegurar que isLoading se resetee
       get().logout();
     }
   },
