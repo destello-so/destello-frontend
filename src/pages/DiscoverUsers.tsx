@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   FiSearch, 
   FiUsers, 
@@ -36,6 +37,7 @@ interface Toast {
 }
 
 export default function DiscoverUsers() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterBy, setFilterBy] = useState<'all' | 'verified'>('all');
@@ -195,6 +197,10 @@ export default function DiscoverUsers() {
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  const handleViewProfile = (userId: string) => {
+    navigate(`/perfil/${userId}`);
   };
 
   const filteredUsers = exploreUsers.filter(user => {
@@ -365,6 +371,7 @@ export default function DiscoverUsers() {
                   user={user} 
                   index={index}
                   onFollow={() => handleFollow(user._id)}
+                  onViewProfile={() => handleViewProfile(user._id)}
                   formatNumber={formatNumber}
                   getInitials={getInitials}
                 />
@@ -454,6 +461,7 @@ export default function DiscoverUsers() {
                     user={user} 
                     index={index}
                     onFollow={() => handleFollow(user._id)}
+                    onViewProfile={() => handleViewProfile(user._id)}
                     formatNumber={formatNumber}
                     getInitials={getInitials}
                   />
@@ -463,6 +471,7 @@ export default function DiscoverUsers() {
                     user={user} 
                     index={index}
                     onFollow={() => handleFollow(user._id)}
+                    onViewProfile={() => handleViewProfile(user._id)}
                     formatNumber={formatNumber}
                     getInitials={getInitials}
                   />
@@ -513,10 +522,11 @@ export default function DiscoverUsers() {
 }
 
 // Componentes de tarjetas
-function SuggestedUserCard({ user, index, onFollow, formatNumber, getInitials }: {
+function SuggestedUserCard({ user, index, onFollow, onViewProfile, formatNumber, getInitials }: {
   user: ExtendedUser;
   index: number;
   onFollow: () => void;
+  onViewProfile: () => void;
   formatNumber: (num: number) => string;
   getInitials: (firstName: string, lastName: string) => string;
 }) {
@@ -542,9 +552,12 @@ function SuggestedUserCard({ user, index, onFollow, formatNumber, getInitials }:
       </div>
 
       <div className="text-center mb-4">
-        <h3 className="text-xl font-bold text-gray-800 mb-1">
+        <button
+          onClick={onViewProfile}
+          className="text-xl font-bold text-gray-800 mb-1 hover:text-pink-600 transition-colors duration-200"
+        >
           {user.firstName} {user.lastName}
-        </h3>
+        </button>
         <p className="text-sm text-gray-500 mb-2">{user.email}</p>
         <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
           {user.bio}
@@ -583,6 +596,7 @@ function SuggestedUserCard({ user, index, onFollow, formatNumber, getInitials }:
 
       <div className="flex gap-2">
         <motion.button
+          onClick={onViewProfile}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-lg shadow-blue-500/30 text-sm font-medium"
@@ -610,10 +624,11 @@ function SuggestedUserCard({ user, index, onFollow, formatNumber, getInitials }:
   );
 }
 
-function UserCard({ user, index, onFollow, formatNumber, getInitials }: {
+function UserCard({ user, index, onFollow, onViewProfile, formatNumber, getInitials }: {
   user: ExtendedUser;
   index: number;
   onFollow: () => void;
+  onViewProfile: () => void;
   formatNumber: (num: number) => string;
   getInitials: (firstName: string, lastName: string) => string;
 }) {
@@ -626,7 +641,10 @@ function UserCard({ user, index, onFollow, formatNumber, getInitials }: {
       className="backdrop-blur-2xl bg-gradient-to-br from-white/60 via-white/50 to-white/40 border-2 border-white/70 rounded-2xl p-4 shadow-lg shadow-blue-500/20 hover:shadow-blue-400/40 transition-all duration-500"
     >
       <div className="relative mb-3">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-blue-500/40">
+        <button
+          onClick={onViewProfile}
+          className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-blue-500/40 hover:scale-105 transition-transform duration-200"
+        >
           <span className="text-lg font-bold text-white">
             {getInitials(user.firstName, user.lastName)}
           </span>
@@ -635,13 +653,16 @@ function UserCard({ user, index, onFollow, formatNumber, getInitials }: {
               <FiAward className="w-2.5 h-2.5 text-white" />
             </div>
           )}
-        </div>
+        </button>
       </div>
 
       <div className="text-center mb-3">
-        <h3 className="font-bold text-gray-800 text-sm mb-1">
+        <button
+          onClick={onViewProfile}
+          className="font-bold text-gray-800 text-sm mb-1 hover:text-blue-600 transition-colors duration-200"
+        >
           {user.firstName} {user.lastName}
-        </h3>
+        </button>
         <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
           {user.bio}
         </p>
@@ -674,10 +695,11 @@ function UserCard({ user, index, onFollow, formatNumber, getInitials }: {
   );
 }
 
-function UserListItem({ user, index, onFollow, formatNumber, getInitials }: {
+function UserListItem({ user, index, onFollow, onViewProfile, formatNumber, getInitials }: {
   user: ExtendedUser;
   index: number;
   onFollow: () => void;
+  onViewProfile: () => void;
   formatNumber: (num: number) => string;
   getInitials: (firstName: string, lastName: string) => string;
 }) {
@@ -691,7 +713,10 @@ function UserListItem({ user, index, onFollow, formatNumber, getInitials }: {
     >
       <div className="flex items-center gap-6">
         <div className="relative">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40">
+          <button
+            onClick={onViewProfile}
+            className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40 hover:scale-105 transition-transform duration-200"
+          >
             <span className="text-lg font-bold text-white">
               {getInitials(user.firstName, user.lastName)}
             </span>
@@ -700,70 +725,67 @@ function UserListItem({ user, index, onFollow, formatNumber, getInitials }: {
                 <FiAward className="w-2.5 h-2.5 text-white" />
               </div>
             )}
-          </div>
+          </button>
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-bold text-gray-800">
+            <button
+              onClick={onViewProfile}
+              className="text-lg font-bold text-gray-800 hover:text-blue-600 transition-colors duration-200"
+            >
               {user.firstName} {user.lastName}
-            </h3>
+            </button>
             <div className="flex items-center gap-1 text-sm text-gray-500">
               <FiMapPin className="w-3 h-3" />
               <span>{user.location}</span>
             </div>
           </div>
-          <p className="text-sm text-gray-500 mb-2">{user.email}</p>
-          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-3">
+          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
             {user.bio}
           </p>
-          
-          <div className="flex flex-wrap gap-1 mb-2">
-            {user.interests.slice(0, 4).map((interest) => (
-              <span
-                key={interest}
-                className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100/80 text-blue-700 border border-blue-200/60"
-              >
-                {interest}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex gap-6 text-center">
-          <div>
-            <div className="text-lg font-bold text-gray-800">{formatNumber(user.posts)}</div>
-            <div className="text-xs text-gray-500">Posts</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-gray-800">{formatNumber(user.followers)}</div>
-            <div className="text-xs text-gray-500">Seguidores</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-gray-800">{formatNumber(user.following)}</div>
-            <div className="text-xs text-gray-500">Siguiendo</div>
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <span>{formatNumber(user.followers)} seguidores</span>
+            <span>{formatNumber(user.posts)} posts</span>
+            {user.interests.length > 0 && (
+              <div className="flex gap-1">
+                {user.interests.slice(0, 2).map((interest) => (
+                  <span
+                    key={interest}
+                    className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100/80 text-blue-700 border border-blue-200/60"
+                  >
+                    {interest}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="flex gap-2">
           <motion.button
+            onClick={onViewProfile}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="p-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-lg shadow-gray-500/30"
+            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-lg shadow-blue-500/30 text-sm font-medium"
           >
-            <FiEye className="w-5 h-5" />
+            <FiEye className="w-4 h-4" />
           </motion.button>
           <motion.button
             onClick={onFollow}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`px-6 py-3 rounded-xl transition-all duration-300 shadow-lg font-medium ${
+            className={`px-4 py-2 rounded-xl transition-all duration-300 shadow-lg text-sm font-medium ${
               user.isFollowing
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/30'
-                : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-blue-500/30'
+                : 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 shadow-rose-500/30'
             }`}
           >
-            {user.isFollowing ? 'Siguiendo' : 'Seguir'}
+            {user.isFollowing ? (
+              <FiUserCheck className="w-4 h-4" />
+            ) : (
+              <FiUserPlus className="w-4 h-4" />
+            )}
           </motion.button>
         </div>
       </div>

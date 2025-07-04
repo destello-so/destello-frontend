@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   FiPackage, 
   FiCheckCircle, 
@@ -576,6 +577,8 @@ function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) 
 // ============================================================================
 
 function EmptyState() {
+  const navigate = useNavigate();
+  
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}
@@ -588,7 +591,7 @@ function EmptyState() {
       <h2 className="text-2xl font-bold text-gray-800 mb-2">No tienes órdenes aún</h2>
       <p className="text-gray-600 mb-6">¡Explora nuestros productos y haz tu primera compra!</p>
       <button
-        onClick={() => window.location.href = '/productos'}
+        onClick={() => navigate('/productos')}
         className="px-6 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 transition-all duration-300"
       >
         Ver productos
