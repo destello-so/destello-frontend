@@ -10,6 +10,7 @@ const ProductosPage = lazy(() => import('./pages/Productos'));
 const CartPage = lazy(() => import('./pages/Cart'));
 const CheckoutPage = lazy(() => import('./pages/Checkout'));
 const MisOrdenesPage = lazy(() => import('./pages/MisOrdenes'));
+const FeedPage = lazy(() => import('./pages/Feed'));
 
 // Componente para rutas protegidas (requieren autenticación)
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -109,7 +110,7 @@ function AppRouter() {
             <Route path="wishlist" element={<div className="p-8"><h1 className="text-2xl font-bold">Lista de Deseos - Próximamente</h1></div>} />
             
             {/* Sección Social */}
-            <Route path="feed" element={<div className="p-8"><h1 className="text-2xl font-bold">Feed Social - Próximamente</h1></div>} />
+            <Route path="feed" element={<FeedPage />} />
             <Route path="crear-post" element={<div className="p-8"><h1 className="text-2xl font-bold">Crear Post - Próximamente</h1></div>} />
             <Route path="mis-seguidores" element={<div className="p-8"><h1 className="text-2xl font-bold">Mis Seguidores - Próximamente</h1></div>} />
             <Route path="siguiendo" element={<div className="p-8"><h1 className="text-2xl font-bold">Siguiendo - Próximamente</h1></div>} />

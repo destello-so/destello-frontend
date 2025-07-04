@@ -1,12 +1,12 @@
 // Tipos de usuario según la API
 export interface Address {
+  _id: string;
   street: string;
   city: string;
   state: string;
   zipCode: string;
   country: string;
   isDefault: boolean;
-  _id?: string;
 }
 
 export interface User {
@@ -14,9 +14,10 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
-  role: 'user' | 'admin';
+  phone: string;
+  role: string;
   isActive: boolean;
+  profilePicture: string;
   addresses: Address[];
   createdAt: string;
   updatedAt: string;
@@ -112,3 +113,20 @@ export type AuthErrorType =
   | 'TOKEN_EXPIRED'         // 401
   | 'SERVER_ERROR'          // 500
   | 'NETWORK_ERROR';        // Sin conexión 
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    user: User;
+  };
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: User;
+  };
+} 

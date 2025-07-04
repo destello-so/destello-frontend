@@ -270,4 +270,12 @@ export interface UseWishlistResult {
   refetch: () => void;
   count: number;
   isEmpty: boolean;
+}
+
+export type ReactionType = 'like' | 'love' | 'helpful' | 'dislike' | 'laugh' | 'wow';
+
+export interface Reaction {
+  type: ReactionType;
+  count: number;
+  reacted: boolean;
 } 

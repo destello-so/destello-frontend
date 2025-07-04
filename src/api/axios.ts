@@ -21,4 +21,25 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Agregar interceptor de respuesta para debuggear
+api.interceptors.response.use(
+  (response) => {
+    console.log('📥 [Axios Interceptor] Respuesta recibida:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
+  (error) => {
+    console.error('❌ [Axios Interceptor] Error en la respuesta:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    return Promise.reject(error);
+  }
+);
+
 export default api; 

@@ -75,7 +75,8 @@ export default {
         'gradient-sunset': 'linear-gradient(135deg, #ff70a6 0%, #ffa0c9 50%, #ffd1dc 100%)',
         'gradient-pearl': 'linear-gradient(135deg, #fef9f3 0%, #f8f4f0 100%)',
         'gradient-soft': 'linear-gradient(45deg, #fdf8f6, #fef7f3)',
-        'gradient-glow': 'radial-gradient(circle at center, #fdf2f8 0%, #fce7f3 100%)'
+        'gradient-glow': 'radial-gradient(circle at center, #fdf2f8 0%, #fce7f3 100%)',
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
 
       // Sombras suaves y elegantes
@@ -107,7 +108,9 @@ export default {
         'slide-up': 'slideUp 0.3s ease-out',
         'bounce-soft': 'bounceSoft 0.6s ease-in-out',
         'pulse-soft': 'pulseSoft 2s infinite',
-        'float': 'float 3s ease-in-out infinite'
+        'float': 'float 3s ease-in-out infinite',
+        'spin-slow': 'spin 3s linear infinite',
+        'spin-slower': 'spin 4s linear infinite',
       },
 
       keyframes: {
@@ -130,7 +133,12 @@ export default {
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' }
-        }
+        },
+        shimmer: {
+          '100%': {
+            transform: 'translateX(100%)',
+          },
+        },
       }
     }
   },
