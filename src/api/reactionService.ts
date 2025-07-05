@@ -3,10 +3,28 @@ import axios from './axios';
 export type ReactionType = 'like' | 'love' | 'helpful' | 'dislike' | 'laugh' | 'wow';
 export type TargetType = 'post' | 'comment';
 
-interface ReactionRequest {
+export interface ReactionRequest {
   targetType: TargetType;
   targetId: string;
   reactionType: ReactionType;
+}
+
+export interface ReactionResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: {
+    action: 'created' | 'updated' | 'deleted';
+    reaction: {
+      _id: string;
+      targetType: TargetType;
+      targetId: string;
+      userId: string;
+      type: ReactionType;
+      createdAt: string;
+      updatedAt: string;
+    };
+  };
 }
 
 interface UserInfo {
@@ -26,15 +44,6 @@ interface Reaction {
   updatedAt: string;
 }
 
-interface ReactionResponse {
-  success: boolean;
-  message: string;
-  data: {
-    action: 'created' | 'updated' | 'deleted';
-    reaction: Reaction;
-  };
-}
-
 interface GetReactionsResponse {
   success: boolean;
   message: string;
@@ -52,17 +61,49 @@ interface GetReactionsResponse {
   };
 }
 
+export interface ReactionStats {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: {
+    total: number;
+    byType: {
+      [key in ReactionType]: number;
+    };
+  };
+}
+
 export const reactionService = {
   toggleReaction: async (data: ReactionRequest): Promise<ReactionResponse> => {
     const response = await axios.post('/reactions', {
-      ...data,
-      type: data.reactionType // Ajustando el nombre del campo para coincidir con el backend
+      targetType: data.targetType,
+      targetId: data.targetId,
+      reactionType: data.reactionType
     });
     return response.data;
   },
 
-  getReactions: async (targetType: TargetType, targetId: string): Promise<GetReactionsResponse> => {
-    const response = await axios.get<GetReactionsResponse>(`/reactions/${targetType}/${targetId}`);
+  getReactions: async (targetType: TargetType, targetId: string): Promise<ReactionResponse> => {
+    const response = await axios.get(`/reactions/${targetType}/${targetId}/check`);
+    return response.data;
+  },
+
+  getReactionStats: async (targetType: TargetType, targetId: string): Promise<ReactionStats> => {
+    const response = await axios.get(`/reactions/${targetType}/${targetId}/stats`);
+    return response.data;
+  },
+
+  addReaction: async (targetId: string, reactionType: ReactionType, targetType: TargetType = 'post'): Promise<ReactionResponse> => {
+    const response = await axios.post('/reactions', {
+      targetType,
+      targetId,
+      reactionType
+    });
+    return response.data;
+  },
+
+  removeReaction: async (targetId: string, reactionType: ReactionType, targetType: TargetType = 'post'): Promise<ReactionResponse> => {
+    const response = await axios.delete(`/reactions/${targetType}/${targetId}/${reactionType}`);
     return response.data;
   }
 }; 

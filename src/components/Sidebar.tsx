@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  FiHome, FiShoppingBag, FiGrid, FiShoppingCart, FiClipboard, 
+  FiHome, FiShoppingBag, FiShoppingCart, FiClipboard, 
   FiHeart, FiRss, FiEdit3, FiUsers, FiSearch, FiUser, 
-  FiMapPin, FiStar, FiSettings, FiBell, FiHelpCircle,
-  FiMail, FiBarChart, FiShield, FiChevronRight,
-  FiLogOut, FiUserCheck, FiToggleLeft, FiToggleRight
+  FiChevronRight, FiLogOut, FiUserCheck
 } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../hooks/useCart';
 
 // Interfaces para la estructura del sidebar
 interface SidebarItem {
@@ -24,15 +23,13 @@ interface SidebarSection {
   id: string;
   title: string;
   items: SidebarItem[];
-  adminOnly?: boolean;
-  userOnly?: boolean;
 }
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['home', 'tienda', 'social']));
-  const [isAdminMode, setIsAdminMode] = useState(false);
+  const { itemCount } = useCart();
 
   // Datos del sidebar organizados por secciones
   const sidebarSections: SidebarSection[] = [
@@ -46,11 +43,9 @@ export default function Sidebar() {
     {
       id: 'tienda',
       title: 'Tienda',
-      userOnly: true,
       items: [
         { id: 'productos', label: 'Productos', icon: <FiShoppingBag />, path: '/productos', color: 'text-emerald-500' },
-        { id: 'categorias', label: 'Categorías', icon: <FiGrid />, path: '/categorias', color: 'text-purple-500' },
-        { id: 'carrito', label: 'Mi Carrito', icon: <FiShoppingCart />, path: '/carrito', badge: 3, color: 'text-orange-500' },
+        { id: 'carrito', label: 'Mi Carrito', icon: <FiShoppingCart />, path: '/carrito', badge: itemCount, color: 'text-orange-500' },
         { id: 'ordenes', label: 'Mis Órdenes', icon: <FiClipboard />, path: '/mis-ordenes', color: 'text-cyan-500' },
         { id: 'wishlist', label: 'Lista de Deseos', icon: <FiHeart />, path: '/wishlist', badge: 7, color: 'text-rose-500' }
       ]
@@ -58,7 +53,6 @@ export default function Sidebar() {
     {
       id: 'social',
       title: 'Social',
-      userOnly: true,
       items: [
         { id: 'feed', label: 'Feed', icon: <FiRss />, path: '/feed', color: 'text-blue-500' },
         { id: 'crear-post', label: 'Crear Post', icon: <FiEdit3 />, path: '/crear-post', color: 'text-green-500' },
@@ -70,33 +64,8 @@ export default function Sidebar() {
     {
       id: 'cuenta',
       title: 'Mi Cuenta',
-      userOnly: true,
       items: [
-        { id: 'perfil', label: 'Mi Perfil', icon: <FiUser />, path: '/mi-perfil', color: 'text-amber-500' },
-        { id: 'direcciones', label: 'Direcciones', icon: <FiMapPin />, path: '/mis-direcciones', color: 'text-red-500' },
-        { id: 'reseñas', label: 'Mis Reseñas', icon: <FiStar />, path: '/mis-reseñas', badge: 12, color: 'text-yellow-500' },
-        { id: 'configuracion', label: 'Configuración', icon: <FiSettings />, path: '/configuracion', color: 'text-gray-500' }
-      ]
-    },
-    {
-      id: 'admin',
-      title: 'Administración',
-      adminOnly: true,
-      items: [
-        { id: 'analytics', label: 'Analytics', icon: <FiBarChart />, path: '/admin/analytics', color: 'text-violet-500' },
-        { id: 'admin-usuarios', label: 'Usuarios', icon: <FiUsers />, path: '/admin/usuarios', color: 'text-blue-600' },
-        { id: 'admin-productos', label: 'Productos', icon: <FiShoppingBag />, path: '/admin/productos', color: 'text-emerald-600' },
-        { id: 'admin-ordenes', label: 'Órdenes', icon: <FiClipboard />, path: '/admin/ordenes', badge: 15, color: 'text-cyan-600' },
-        { id: 'moderacion', label: 'Moderación', icon: <FiShield />, path: '/admin/moderacion', badge: 5, color: 'text-red-600' }
-      ]
-    },
-    {
-      id: 'soporte',
-      title: 'Soporte',
-      items: [
-        { id: 'notificaciones', label: 'Notificaciones', icon: <FiBell />, path: '/notificaciones', badge: 8, color: 'text-orange-500' },
-        { id: 'ayuda', label: 'Ayuda', icon: <FiHelpCircle />, path: '/ayuda', color: 'text-green-500' },
-        { id: 'contacto', label: 'Contacto', icon: <FiMail />, path: '/contacto', color: 'text-blue-500' }
+        { id: 'perfil', label: 'Mi Perfil', icon: <FiUser />, path: '/mi-perfil', color: 'text-amber-500' }
       ]
     }
   ];
@@ -115,15 +84,6 @@ export default function Sidebar() {
   // Función para verificar si un item está activo
   const isActiveItem = (path: string) => {
     return location.pathname === path;
-  };
-
-  // Función para filtrar secciones según el modo
-  const getVisibleSections = () => {
-    return sidebarSections.filter(section => {
-      if (isAdminMode && section.userOnly) return false;
-      if (!isAdminMode && section.adminOnly) return false;
-      return true;
-    });
   };
 
   // Función para manejar logout
@@ -234,37 +194,6 @@ export default function Sidebar() {
             <p className="text-rose-500 text-xs truncate">{user?.email}</p>
           </div>
         </motion.div>
-
-        {/* Toggle Admin/Usuario */}
-        <motion.div
-          className="relative mt-4 flex items-center justify-between p-3 rounded-2xl bg-white/15 backdrop-blur-3xl border border-white/30
-                     shadow-xl shadow-rose-200/40 before:absolute before:inset-0 before:bg-gradient-to-r 
-                     before:from-white/25 before:via-pink-50/15 before:to-white/10 before:rounded-2xl before:backdrop-blur-2xl before:pointer-events-none
-                     after:absolute after:inset-0 after:bg-gradient-to-b after:from-transparent after:via-rose-100/10 after:to-pink-100/15 after:rounded-2xl after:pointer-events-none
-                     overflow-hidden"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-                            <div className="relative z-10 flex items-center space-x-2">
-            <FiUserCheck className={`text-sm ${isAdminMode ? 'text-pink-600' : 'text-rose-400'}`} />
-            <span className="text-rose-700 text-sm font-medium">
-              {isAdminMode ? 'Admin' : 'Usuario'}
-            </span>
-          </div>
-          <motion.button
-            onClick={() => setIsAdminMode(!isAdminMode)}
-            className="relative z-10 flex items-center space-x-1"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isAdminMode ? (
-              <FiToggleRight className="text-2xl text-pink-600" />
-            ) : (
-              <FiToggleLeft className="text-2xl text-rose-400" />
-            )}
-          </motion.button>
-        </motion.div>
       </div>
 
       {/* Navegación */}
@@ -272,7 +201,7 @@ export default function Sidebar() {
                       hover:scrollbar-thumb-rose-500/80 scrollbar-thumb-rounded-full scrollbar-track-rounded-full
                       scrollbar-w-2 pr-2">
         <div className="p-4 space-y-2">
-          {getVisibleSections().map((section, sectionIndex) => (
+          {sidebarSections.map((section, sectionIndex) => (
             <motion.div
               key={section.id}
               initial={{ opacity: 0, y: 20 }}

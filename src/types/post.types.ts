@@ -49,6 +49,18 @@ export interface PostWithReactions extends Post {
   shares: number;
 }
 
+export interface Comment {
+  _id: string;
+  userId: {
+    _id: string;
+    email: string;
+  };
+  text: string;
+  reactions: PostReactions;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const reactionIcons = {
   like: FaThumbsUp,
   love: FaHeart,

@@ -1,35 +1,40 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+
+import { createRoot } from 'react-dom/client'
+import { Toaster } from 'react-hot-toast'
+import './index.scss'
 import Router from './router'
 import './index.scss'
-import { Toaster } from 'react-hot-toast'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+createRoot(document.getElementById('root')!).render(
+  <>
     <Router />
     <Toaster 
       position="top-right"
       toastOptions={{
-        duration: 3000,
+        duration: 4000,
         style: {
-          background: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(10px)',
-          color: '#333',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          color: '#374151',
+          fontSize: '14px',
+          fontWeight: '500',
         },
         success: {
           iconTheme: {
-            primary: '#10B981',
-            secondary: '#fff',
+            primary: '#10b981',
+            secondary: '#ffffff',
           },
         },
         error: {
           iconTheme: {
-            primary: '#EF4444',
-            secondary: '#fff',
+            primary: '#ef4444',
+            secondary: '#ffffff',
           },
         },
       }}
     />
-  </React.StrictMode>,
+  </>,
 )

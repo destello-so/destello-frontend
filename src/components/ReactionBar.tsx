@@ -1,13 +1,16 @@
-import { motion } from 'framer-motion';
-import type { ReactionType } from '../api/reactionService';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { ReactionType, TargetType } from '../api/reactionService';
 import { useReactions } from '../hooks/useReactions';
 import { reactionIcons, reactionColors } from '../types/post.types';
+import { FaHeart } from 'react-icons/fa';
 import clsx from 'clsx';
+import { useState } from 'react';
 
 interface ReactionBarProps {
-  targetType: 'post' | 'comment';
+  targetType: TargetType;
   targetId: string;
   className?: string;
+  onReactionChange?: () => void;
 }
 
 const reactionLabels = {
@@ -19,63 +22,75 @@ const reactionLabels = {
   wow: 'Me sorprende',
 } as const;
 
-export const ReactionBar = ({
-  targetType,
-  targetId,
-  className
-}: ReactionBarProps) => {
-  const { reactions, userReaction, toggleReaction, isLoading } = useReactions(targetType, targetId);
+export const ReactionBar: React.FC<ReactionBarProps> = ({ targetType, targetId, className, onReactionChange }) => {
+  const { toggleReaction, isLoading } = useReactions();
+  const [showReactions, setShowReactions] = useState(false);
 
-  const handleReaction = async (type: ReactionType) => {
+  const handleReaction = async (reactionType: ReactionType) => {
     if (isLoading) return;
-    await toggleReaction(type);
+
+    try {
+      await toggleReaction(targetId, reactionType, targetType);
+      onReactionChange?.();
+      setShowReactions(false);
+    } catch (error) {
+      console.error('Error handling reaction:', error);
+    }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-      className={clsx(
-        "bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl p-2 z-50",
-        className
-      )}
-    >
-      <div className="flex items-center space-x-1">
-        {(Object.entries(reactionIcons) as Array<[ReactionType, typeof reactionIcons[keyof typeof reactionIcons]]>).map(([type, Icon]) => (
-          <motion.button
-            key={type}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleReaction(type)}
+    <div className="relative">
+      <button
+        onClick={() => setShowReactions(!showReactions)}
+        className={clsx(
+          "flex items-center gap-2 px-4 py-2 rounded-full",
+          "text-pink-500 hover:text-pink-600",
+          "transition-all duration-200",
+          "bg-pink-50/50 hover:bg-pink-100/50",
+          "font-medium",
+          className
+        )}
+      >
+        <FaHeart className="h-5 w-5" />
+        <span>Reaccionar</span>
+      </button>
+
+      <AnimatePresence>
+        {showReactions && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
             className={clsx(
-              "relative group p-2 rounded-xl transition-colors",
-              type === userReaction ? "bg-gray-100" : "hover:bg-gray-50"
+              "absolute bottom-full left-0 mb-2",
+              "flex items-center gap-1 p-2",
+              "bg-white rounded-xl shadow-lg",
+              "backdrop-blur-sm bg-white/90"
             )}
-            disabled={isLoading}
           >
-            <Icon 
-              className={clsx(
-                "h-6 w-6 transition-transform group-hover:scale-110",
-                reactionColors[type as keyof typeof reactionColors],
-                type === userReaction ? "scale-110" : ""
-              )} 
-            />
-            
-            {/* Contador de reacciones */}
-            {reactions[type] > 0 && (
-              <div className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-white rounded-full flex items-center justify-center text-xs font-medium shadow-sm">
-                {reactions[type]}
-              </div>
-            )}
-            
-            {/* Tooltip */}
-            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              {reactionLabels[type as keyof typeof reactionLabels]}
-            </span>
-          </motion.button>
-        ))}
-      </div>
-    </motion.div>
+            {Object.entries(reactionIcons).map(([type, Icon]) => (
+              <motion.button
+                key={type}
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => handleReaction(type as ReactionType)}
+                className={clsx(
+                  "p-2 rounded-lg transition-colors",
+                  "hover:bg-gray-100"
+                )}
+                disabled={isLoading}
+                title={reactionLabels[type as keyof typeof reactionLabels]}
+              >
+                <Icon className={clsx(
+                  "h-6 w-6",
+                  reactionColors[type as ReactionType]
+                )} />
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }; 

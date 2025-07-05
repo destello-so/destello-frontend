@@ -1,22 +1,10 @@
 import axios from './axios';
+import type { Comment } from '../types/post.types';
 
 interface CommentRequest {
   parentType: 'post';
   parentId: string;
   text: string;
-}
-
-interface Comment {
-  _id: string;
-  parentType: string;
-  parentId: string;
-  userId: {
-    _id: string;
-    email: string;
-  };
-  text: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface CommentsResponse {
@@ -41,6 +29,16 @@ export const commentService = {
 
   getComments: async (parentType: string, parentId: string, page = 1, limit = 20) => {
     const response = await axios.get<CommentsResponse>(`/comments/parent/${parentType}/${parentId}?page=${page}&limit=${limit}`);
+    return response.data;
+  },
+
+  addReaction: async (commentId: string, reactionType: string) => {
+    const response = await axios.post(`/comments/${commentId}/reactions`, { type: reactionType });
+    return response.data;
+  },
+
+  removeReaction: async (commentId: string, reactionType: string) => {
+    const response = await axios.delete(`/comments/${commentId}/reactions/${reactionType}`);
     return response.data;
   }
 }; 

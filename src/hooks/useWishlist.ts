@@ -2,7 +2,7 @@
 // ❤️ USE WISHLIST HOOK - Wrapper del store global de wishlist
 // ============================================================================
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useWishlistStore } from '../store/wishlistStore';
 import type { UseWishlistResult } from '../types/product.types';
 
@@ -18,11 +18,15 @@ export const useWishlist = (): UseWishlistResult => {
     refetch
   } = useWishlistStore();
 
+  const hasInitialized = useRef(false);
+
+  // Cargar wishlist al montar - SOLO UNA VEZ al inicializar
   useEffect(() => {
-    if (!products.length && !loading) {
+    if (!hasInitialized.current && !loading) {
+      hasInitialized.current = true;
       refetch();
     }
-  }, [products.length, loading, refetch]);
+  }, [loading]); // Solo depende de loading, no de products.length
 
   return {
     wishlist: products,

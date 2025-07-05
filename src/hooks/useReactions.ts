@@ -1,118 +1,75 @@
-import { useState, useEffect } from 'react';
-import { reactionService } from '../api/reactionService';
-import type { ReactionType, TargetType } from '../api/reactionService';
+import { useState } from 'react';
+import { reactionService, type TargetType, type ReactionStats } from '../api/reactionService';
+import type { ReactionType } from '../types/post.types';
 import { toast } from 'react-hot-toast';
 
 interface UseReactionsReturn {
-  reactions: { [key in ReactionType]: number };
-  userReaction: ReactionType | null;
-  toggleReaction: (type: ReactionType) => Promise<void>;
   isLoading: boolean;
+  addReaction: (targetId: string, reactionType: ReactionType, targetType: TargetType) => Promise<void>;
+  removeReaction: (targetId: string, reactionType: ReactionType, targetType: TargetType) => Promise<void>;
+  toggleReaction: (targetId: string, reactionType: ReactionType, targetType: TargetType) => Promise<void>;
+  getStats: (targetType: TargetType, targetId: string) => Promise<ReactionStats | null>;
 }
 
-export const useReactions = (targetType: TargetType, targetId: string): UseReactionsReturn => {
-  const [reactions, setReactions] = useState<{ [key in ReactionType]: number }>({
-    like: 0,
-    love: 0,
-    helpful: 0,
-    dislike: 0,
-    laugh: 0,
-    wow: 0,
-  });
-  const [userReaction, setUserReaction] = useState<ReactionType | null>(null);
+export const useReactions = (): UseReactionsReturn => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  useEffect(() => {
-    const userEmail = localStorage.getItem('userEmail') || '';
-    
-    const loadReactions = async () => {
-      try {
-        const response = await reactionService.getReactions(targetType, targetId);
-        const reactionCounts: { [key in ReactionType]: number } = {
-          like: 0,
-          love: 0,
-          helpful: 0,
-          dislike: 0,
-          laugh: 0,
-          wow: 0,
-        };
-        
-        let userCurrentReaction: ReactionType | null = null;
-        
-        // Procesar las reacciones
-        Object.entries(response.data.reactionsByType).forEach(([type, reactions]) => {
-          const reactionType = type as ReactionType;
-          reactionCounts[reactionType] = reactions.length;
-          
-          // Verificar si el usuario actual tiene esta reacción
-          if (reactions.some(reaction => reaction.userId.email === userEmail)) {
-            userCurrentReaction = reactionType;
-          }
-        });
-        
-        setReactions(reactionCounts);
-        setUserReaction(userCurrentReaction);
-      } catch (error) {
-        console.error('Error al cargar reacciones:', error);
-        if (!isInitialLoad) {
-          toast.error('No se pudieron cargar las reacciones');
-        }
-      } finally {
-        setIsInitialLoad(false);
-      }
-    };
-
-    loadReactions();
-  }, [targetId, targetType]);
-
-  const toggleReaction = async (type: ReactionType) => {
-    setIsLoading(true);
+  const getStats = async (targetType: TargetType, targetId: string) => {
     try {
+      const stats = await reactionService.getReactionStats(targetType, targetId);
+      return stats;
+    } catch (error) {
+      console.error('Error getting reaction stats:', error);
+      toast.error('No se pudieron cargar las reacciones');
+      return null;
+    }
+  };
+
+  const toggleReaction = async (targetId: string, reactionType: ReactionType, targetType: TargetType) => {
+    try {
+      setIsLoading(true);
       await reactionService.toggleReaction({
         targetType,
         targetId,
-        reactionType: type,
+        reactionType
       });
-      
-      // Actualizar el estado local optimistamente
-      if (userReaction === type) {
-        // Si ya tenía esta reacción, la quitamos
-        setUserReaction(null);
-        setReactions(prev => ({
-          ...prev,
-          [type]: Math.max(0, prev[type] - 1)
-        }));
-      } else {
-        // Si tenía otra reacción, la quitamos y agregamos la nueva
-        if (userReaction) {
-          setReactions(prev => ({
-            ...prev,
-            [userReaction]: Math.max(0, prev[userReaction] - 1),
-            [type]: prev[type] + 1
-          }));
-        } else {
-          // Si no tenía ninguna reacción, solo agregamos la nueva
-          setReactions(prev => ({
-            ...prev,
-            [type]: prev[type] + 1
-          }));
-        }
-        setUserReaction(type);
-      }
-    } catch (error: any) {
-      console.error('Error al reaccionar:', error);
-      const errorMessage = error.response?.data?.message || 'No se pudo procesar tu reacción';
-      toast.error(errorMessage);
+    } catch (error) {
+      console.error('Error toggling reaction:', error);
+      toast.error('No se pudo procesar la reacción');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addReaction = async (targetId: string, reactionType: ReactionType, targetType: TargetType) => {
+    try {
+      setIsLoading(true);
+      await reactionService.addReaction(targetId, reactionType, targetType);
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      toast.error('No se pudo agregar la reacción');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const removeReaction = async (targetId: string, reactionType: ReactionType, targetType: TargetType) => {
+    try {
+      setIsLoading(true);
+      await reactionService.removeReaction(targetId, reactionType, targetType);
+    } catch (error) {
+      console.error('Error removing reaction:', error);
+      toast.error('No se pudo quitar la reacción');
     } finally {
       setIsLoading(false);
     }
   };
 
   return {
-    reactions,
-    userReaction,
+    isLoading,
+    addReaction,
+    removeReaction,
     toggleReaction,
-    isLoading
+    getStats
   };
 }; 

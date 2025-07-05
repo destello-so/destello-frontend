@@ -1,7 +1,10 @@
-import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 
-export default function Home() {
+interface HomeProps {
+  children: React.ReactNode;
+}
+
+export default function Home({ children }: HomeProps) {
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
       {/* SIDEBAR - 30% del ancho, altura completa */}
@@ -15,10 +18,10 @@ export default function Home() {
           <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-r from-rose-500 to-orange-500 rounded-full blur-3xl" />
         </div>
         
-        {/* Contenido dinámico basado en rutas */}
+        {/* Contenido dinámico basado en children */}
         <div className="relative z-10 p-8 h-full">
           {/* Aquí se renderizarán las diferentes vistas según la ruta */}
-          <Outlet />
+          {children}
         </div>
       </main>
     </div>

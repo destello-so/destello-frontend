@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants, TargetAndTransition } from 'framer-motion';
 import { usePosts } from '../hooks/usePosts';
-import { FaThumbsUp, FaHeart, FaLightbulb, FaThumbsDown, FaLaugh, FaSurprise, FaComment, FaShare, FaPaperPlane, FaFeather, FaEdit, FaCheck, FaTimes, FaTrash } from 'react-icons/fa';
-import type { PostReactions, Post } from '../types/post.types';
+import { FaThumbsUp, FaHeart, FaLightbulb, FaThumbsDown, FaLaugh, FaSurprise, FaComment, FaShare, FaPaperPlane, FaFeather, FaEdit, FaCheck, FaTimes, FaTrash, FaLink, FaTwitter, FaFacebook, FaWhatsapp } from 'react-icons/fa';
+import type { PostReactions, Post, Comment } from '../types/post.types';
 import clsx from "clsx";
 import { formatTimeAgo } from "../utils/dateUtils";
 import { reactionColors, reactionIcons, type ReactionType } from "../types/post.types";
@@ -18,6 +18,7 @@ import { useAuthStore } from '../store/authStore';
 import { postService } from '../api/postService';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import { ReactionCounter } from '../components/ReactionCounter';
 
 // Configuración de animaciones
 const animations = {
@@ -44,14 +45,8 @@ const hoverAnimation: TargetAndTransition = {
   }
 };
 
-interface Comment {
-  _id: string;
-  userId: {
-    _id: string;
-    email: string;
-  };
-  text: string;
-  createdAt: string;
+interface CommentState {
+  [postId: string]: Comment[];
 }
 
 const Feed = () => {
@@ -63,7 +58,7 @@ const Feed = () => {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
-  const [comments, setComments] = useState<{ [postId: string]: Comment[] }>({});
+  const [comments, setComments] = useState<CommentState>({});
   const [loadingComments, setLoadingComments] = useState<{ [postId: string]: boolean }>({});
   const [filter, setFilter] = useState<'all' | 'user'>('all');
   const [page, setPage] = useState(1);
@@ -74,6 +69,8 @@ const Feed = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeletingPost, setIsDeletingPost] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState<string | null>(null);
+  const [commentCounts, setCommentCounts] = useState<{ [postId: string]: number }>({});
 
   const { user } = useAuthStore();
   const filteredPosts = filter === 'all' 
@@ -101,6 +98,15 @@ const Feed = () => {
     loadPosts(page);
   }, [page, user?.email]);
 
+  // Cargar comentarios iniciales para todos los posts
+  useEffect(() => {
+    if (posts.length > 0) {
+      posts.forEach(post => {
+        loadComments(post._id);
+      });
+    }
+  }, [posts]);
+
   const handleReaction = (postId: string, reactionType: keyof PostReactions) => {
     setSelectedReactions(prev => ({
       ...prev,
@@ -114,12 +120,13 @@ const Feed = () => {
     return <Icon className="h-5 w-5" />;
   };
 
-  // Función para cargar comentarios de un post
+  // Función para cargar comentarios actualizada
   const loadComments = async (postId: string) => {
     setLoadingComments(prev => ({ ...prev, [postId]: true }));
     try {
       const response = await commentService.getComments('post', postId);
       setComments(prev => ({ ...prev, [postId]: response.data.comments }));
+      setCommentCounts(prev => ({ ...prev, [postId]: response.data.comments.length }));
     } catch (error) {
       console.error('Error al cargar comentarios:', error);
       toast.error('No se pudieron cargar los comentarios');
@@ -128,13 +135,7 @@ const Feed = () => {
     }
   };
 
-  // Cargar comentarios cuando se muestra el input
-  useEffect(() => {
-    if (showCommentInput) {
-      loadComments(showCommentInput);
-    }
-  }, [showCommentInput]);
-
+  // Función para manejar la creación de comentarios actualizada
   const handleCommentSubmit = async (postId: string) => {
     if (!commentText.trim()) return;
 
@@ -153,6 +154,8 @@ const Feed = () => {
       
       // Recargar los comentarios del post
       await loadComments(postId);
+      // Actualizar el contador
+      setCommentCounts(prev => ({ ...prev, [postId]: (prev[postId] || 0) + 1 }));
     } catch (error: any) {
       console.error('Error al crear comentario:', error);
       const errorMessage = error.response?.data?.message || 'Error al publicar el comentario';
@@ -219,6 +222,53 @@ const Feed = () => {
   const openDeleteConfirm = (postId: string) => {
     setPostToDelete(postId);
     setShowDeleteConfirm(true);
+  };
+
+  const handleShare = async (postId: string, platform: 'copy' | 'twitter' | 'facebook' | 'whatsapp') => {
+    const post = posts.find(p => p._id === postId);
+    if (!post) return;
+
+    const postUrl = `${window.location.origin}/post/${postId}`;
+    const postText = post.text.length > 100 ? post.text.substring(0, 97) + '...' : post.text;
+    const hashtags = post.tags?.join(',') || '';
+    
+    switch (platform) {
+      case 'copy':
+        try {
+          const textToCopy = `${postText}\n\nVer más en: ${postUrl}`;
+          await navigator.clipboard.writeText(textToCopy);
+          toast.success('¡Contenido copiado al portapapeles!');
+        } catch (error) {
+          toast.error('No se pudo copiar el contenido');
+        }
+        break;
+      
+      case 'twitter':
+        const twitterText = encodeURIComponent(`${postText}\n\n${hashtags ? '#' + hashtags.replace(/,/g, ' #') : ''}`);
+        window.open(
+          `https://twitter.com/intent/tweet?text=${twitterText}&url=${encodeURIComponent(postUrl)}`,
+          '_blank'
+        );
+        break;
+      
+      case 'facebook':
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}&quote=${encodeURIComponent(postText)}`,
+          '_blank',
+          'width=600,height=400'
+        );
+        break;
+      
+      case 'whatsapp':
+        const whatsappText = `${postText}\n\n${hashtags ? '#' + hashtags.replace(/,/g, ' #') + '\n\n' : ''}Ver más en: ${postUrl}`;
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(whatsappText)}`,
+          '_blank'
+        );
+        break;
+    }
+    
+    setShowShareMenu(null);
   };
 
   if (loading) {
@@ -549,12 +599,13 @@ const Feed = () => {
                               <p className="mt-3 text-gray-800">
                                 {post.text}
                               </p>
+                              {/* Tags */}
                               {post.tags && post.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
+                                <div className="flex flex-wrap gap-2 mt-3">
                                   {post.tags.map((tag, index) => (
                                     <span
                                       key={index}
-                                      className="px-2 py-1 bg-white/30 backdrop-blur-sm rounded-full text-xs text-gray-700"
+                                      className="px-3 py-1 text-sm font-medium text-pink-600 bg-pink-50/50 rounded-full"
                                     >
                                       #{tag}
                                     </span>
@@ -567,172 +618,230 @@ const Feed = () => {
                           {/* Sección de reacciones y comentarios */}
                           <div className="mt-4 space-y-3">
                             {/* Mostrar reacciones existentes */}
-                            {Object.entries(post.reactions || {}).some(([_, count]) => count > 0) && (
-                              <div className="flex items-center space-x-3 p-2 bg-white/10 backdrop-blur-sm rounded-xl">
-                                {Object.entries(post.reactions || {}).map(([type, count]) => {
-                                  if (count > 0) {
-                                    const Icon = reactionIcons[type as ReactionType];
-                                    return (
-                                      <div
-                                        key={type}
-                                        className="flex items-center space-x-1 text-gray-600"
-                                      >
-                                        <Icon className={clsx(
-                                          "h-4 w-4",
-                                          reactionColors[type as ReactionType]
-                                        )} />
-                                        <span className="text-sm">{count}</span>
-                                      </div>
-                                    );
-                                  }
-                                  return null;
-                                })}
-                              </div>
-                            )}
+                            <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl">
+                              <ReactionCounter 
+                                targetType="post" 
+                                targetId={post._id} 
+                                size="md" 
+                                onReactionChange={() => loadPosts(page)} 
+                              />
+                            </div>
 
                             {/* Barra de acciones */}
-                            <div className="flex items-center justify-between border-t border-gray-200/30 pt-3">
-                              {/* Botón de reacciones */}
-                              <div className="relative">
-                                <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={() => setShowReactions(showReactions === post._id ? null : post._id)}
-                                  className={clsx(
-                                    "flex items-center space-x-2 px-4 py-2 rounded-xl",
-                                    "bg-white/20 hover:bg-white/30 transition-colors",
-                                    "text-gray-700 font-medium"
-                                  )}
-                                >
-                                  <span>😊</span>
-                                  <span>Reaccionar</span>
-                                </motion.button>
+                            <div className="mt-4 flex items-center gap-4">
+                              <ReactionBar
+                                targetType="post"
+                                targetId={post._id}
+                                onReactionChange={() => loadPosts(page)}
+                              />
 
-                                {/* ReactionBar component */}
-                                <AnimatePresence>
-                                  {showReactions === post._id && (
-                                    <ReactionBar
-                                      targetType="post"
-                                      targetId={post._id}
-                                      className="absolute bottom-full left-0 mb-2"
-                                    />
-                                  )}
-                                </AnimatePresence>
-                              </div>
-
-                              {/* Botón de comentarios */}
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setShowCommentInput(showCommentInput === post._id ? null : post._id)}
+                              <button
+                                onClick={() => {
+                                  setShowCommentInput(showCommentInput === post._id ? null : post._id);
+                                  if (showCommentInput !== post._id) {
+                                    loadComments(post._id);
+                                  }
+                                }}
                                 className={clsx(
-                                  "flex items-center space-x-2 px-4 py-2 rounded-xl",
-                                  showCommentInput === post._id
-                                    ? "bg-purple-100/50 text-purple-600"
-                                    : "bg-white/20 hover:bg-white/30 text-gray-700",
-                                  "transition-colors font-medium"
+                                  "flex items-center gap-2 px-4 py-2 rounded-full",
+                                  "text-gray-600 hover:text-gray-700",
+                                  "transition-all duration-200",
+                                  showCommentInput === post._id ? "bg-gray-100/50" : "bg-gray-50/50 hover:bg-gray-100/50",
+                                  "font-medium"
                                 )}
                               >
-                                <FaComment className="h-4 w-4" />
-                                <span>
-                                  {comments[post._id]?.length || 0} {comments[post._id]?.length === 1 ? 'Comentario' : 'Comentarios'}
-                                </span>
-                              </motion.button>
+                                <FaComment className="h-5 w-5" />
+                                <span>Comentarios ({commentCounts[post._id] || post.comments || 0})</span>
+                              </button>
+
+                              <button
+                                onClick={() => setShowShareMenu(showShareMenu === post._id ? null : post._id)}
+                                className={clsx(
+                                  "flex items-center gap-2 px-4 py-2 rounded-full",
+                                  "text-gray-600 hover:text-gray-700",
+                                  "transition-all duration-200",
+                                  showShareMenu === post._id ? "bg-gray-100/50" : "bg-gray-50/50 hover:bg-gray-100/50",
+                                  "font-medium",
+                                  "relative"
+                                )}
+                              >
+                                <FaShare className="h-5 w-5" />
+                                <span>Compartir</span>
+
+                                <AnimatePresence>
+                                  {showShareMenu === post._id && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                      className={clsx(
+                                        "absolute bottom-full left-0 mb-2",
+                                        "flex items-center gap-1 p-2",
+                                        "bg-white rounded-xl shadow-lg",
+                                        "backdrop-blur-sm bg-white/90"
+                                      )}
+                                    >
+                                      <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleShare(post._id, 'copy');
+                                        }}
+                                        className="p-2 hover:bg-gray-100 rounded-lg text-gray-700"
+                                        title="Copiar enlace"
+                                      >
+                                        <FaLink className="h-5 w-5" />
+                                      </motion.button>
+
+                                      <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleShare(post._id, 'twitter');
+                                        }}
+                                        className="p-2 hover:bg-gray-100 rounded-lg text-blue-400"
+                                        title="Compartir en Twitter"
+                                      >
+                                        <FaTwitter className="h-5 w-5" />
+                                      </motion.button>
+
+                                      <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleShare(post._id, 'facebook');
+                                        }}
+                                        className="p-2 hover:bg-gray-100 rounded-lg text-blue-600"
+                                        title="Compartir en Facebook"
+                                      >
+                                        <FaFacebook className="h-5 w-5" />
+                                      </motion.button>
+
+                                      <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleShare(post._id, 'whatsapp');
+                                        }}
+                                        className="p-2 hover:bg-gray-100 rounded-lg text-green-500"
+                                        title="Compartir en WhatsApp"
+                                      >
+                                        <FaWhatsapp className="h-5 w-5" />
+                                      </motion.button>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </button>
                             </div>
 
                             {/* Sección de comentarios */}
-                            <AnimatePresence>
-                              {showCommentInput === post._id && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="space-y-4"
-                                >
-                                  {/* Input de comentario */}
-                                  <div className="flex items-end space-x-2">
-                                    <div className="flex-1">
-                                      <textarea
-                                        value={commentText}
-                                        onChange={(e) => setCommentText(e.target.value)}
-                                        placeholder="Escribe un comentario..."
-                                        className="w-full px-4 py-2 bg-white/50 backdrop-blur-sm rounded-xl resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-400/50 text-gray-800 placeholder-gray-500"
-                                        rows={2}
-                                      />
-                                    </div>
-                                    <motion.button
-                                      whileHover={{ scale: 1.05 }}
-                                      whileTap={{ scale: 0.95 }}
-                                      onClick={() => handleCommentSubmit(post._id)}
-                                      disabled={isSubmitting || !commentText.trim()}
-                                      className={clsx(
-                                        "p-3 rounded-xl text-white",
-                                        "bg-gradient-to-r from-pink-400 to-purple-400",
-                                        "shadow-lg transition-all duration-300",
-                                        "disabled:opacity-50 disabled:cursor-not-allowed"
-                                      )}
-                                    >
-                                      {isSubmitting ? (
-                                        <motion.div
-                                          animate={{ rotate: 360 }}
-                                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                        >
-                                          <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                          </svg>
-                                        </motion.div>
-                                      ) : (
-                                        <FaPaperPlane className="h-5 w-5" />
-                                      )}
-                                    </motion.button>
-                                  </div>
+                            {showCommentInput === post._id && (
+                              <div className="mt-4 space-y-4">
 
-                                  {/* Lista de comentarios */}
-                                  {loadingComments[post._id] ? (
-                                    <div className="flex justify-center py-4">
+                                 {/* Input para nuevo comentario */}
+                                 <div className="relative mt-4">
+                                  <textarea
+                                    value={commentText}
+                                    onChange={(e) => setCommentText(e.target.value)}
+                                    placeholder="Escribe un comentario..."
+                                    className={clsx(
+                                      "w-full px-4 py-3 rounded-2xl",
+                                      "bg-white/50 backdrop-blur-sm",
+                                      "border border-pink-100",
+                                      "placeholder-gray-400",
+                                      "focus:outline-none focus:ring-2 focus:ring-pink-200",
+                                      "transition-all duration-200",
+                                      "resize-none",
+                                      "min-h-[100px]"
+                                    )}
+                                  />
+                                  <button
+                                    onClick={() => handleCommentSubmit(post._id)}
+                                    disabled={isSubmitting || !commentText.trim()}
+                                    className={clsx(
+                                      "absolute bottom-3 right-3",
+                                      "px-4 py-2 rounded-full",
+                                      "bg-pink-500 hover:bg-pink-600",
+                                      "text-white font-medium",
+                                      "transition-all duration-200",
+                                      "flex items-center gap-2",
+                                      "disabled:opacity-50 disabled:cursor-not-allowed"
+                                    )}
+                                  >
+                                    <span>Comentar</span>
+                                    <FaPaperPlane className="h-4 w-4" />
+                                  </button>
+                                </div>
+                                {/* Lista de comentarios existentes */}
+                                {loadingComments[post._id] ? (
+                                  <div className="flex justify-center py-4">
+                                    <motion.div
+                                      animate={{ rotate: 360 }}
+                                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    >
+                                      <svg className="w-6 h-6 animate-spin text-pink-500" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                      </svg>
+                                    </motion.div>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-4">
+                                    {comments[post._id]?.map((comment) => (
                                       <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                        key={comment._id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-white/10 backdrop-blur-sm rounded-xl p-4"
                                       >
-                                        <svg className="w-6 h-6 animate-spin text-purple-500" viewBox="0 0 24 24">
-                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
-                                      </motion.div>
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-3">
-                                      {comments[post._id]?.map((comment) => (
-                                        <motion.div
-                                          key={comment._id}
-                                          initial={{ opacity: 0, y: 10 }}
-                                          animate={{ opacity: 1, y: 0 }}
-                                          className="bg-white/10 backdrop-blur-sm rounded-xl p-3"
-                                        >
-                                          <div className="flex items-center space-x-2">
-                                            <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                              {comment.userId.email[0].toUpperCase()}
-                                            </div>
-                                            <div>
+                                        <div className="flex items-start gap-3">
+                                          <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                            {comment.userId.email[0].toUpperCase()}
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-2">
                                               <p className="text-sm font-medium text-gray-900">
                                                 {comment.userId.email}
                                               </p>
+                                              <span className="text-xs text-gray-500">•</span>
                                               <p className="text-xs text-gray-500">
                                                 {format(new Date(comment.createdAt), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
                                               </p>
                                             </div>
+                                            <p className="mt-2 text-gray-800 text-sm">
+                                              {comment.text}
+                                            </p>
+
+                                            {/* Reacciones del comentario */}
+                                            <div className="mt-3">
+                                              <ReactionCounter 
+                                                targetType="comment" 
+                                                targetId={comment._id} 
+                                                size="sm" 
+                                                onReactionChange={() => loadComments(post._id)} 
+                                              />
+                                            </div>
+
+                                            {/* Botón de reaccionar al comentario */}
+                                            <div className="mt-3">
+                                              <ReactionBar
+                                                targetType="comment"
+                                                targetId={comment._id}
+                                                onReactionChange={() => loadComments(post._id)}
+                                              />
+                                            </div>
                                           </div>
-                                          <p className="mt-2 text-gray-800 text-sm">
-                                            {comment.text}
-                                          </p>
-                                        </motion.div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                                        </div>
+                                      </motion.div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -796,22 +905,7 @@ const Feed = () => {
         </div>
       </main>
 
-      {/* Botón flotante para crear post */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={clsx(
-          "fixed bottom-6 right-6 h-14 w-14 rounded-full",
-          "bg-gradient-to-r from-pink-400 to-purple-400",
-          "text-white flex items-center justify-center",
-          "shadow-lg hover:shadow-xl",
-          "border border-white/50"
-        )}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-      </motion.button>
+   
 
       {/* Modal de confirmación de eliminación */}
       <Transition show={showDeleteConfirm} as={Fragment}>

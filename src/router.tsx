@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 
+import PageTitle from './components/PageTitle';
+
 const HomePage = lazy(() => import('./pages/Home'));
 const LoginPage = lazy(() => import('./pages/Login'));
 const RegisterPage = lazy(() => import('./pages/Register'));
@@ -11,12 +13,18 @@ const CartPage = lazy(() => import('./pages/Cart'));
 const CheckoutPage = lazy(() => import('./pages/Checkout'));
 const MisOrdenesPage = lazy(() => import('./pages/MisOrdenes'));
 const FeedPage = lazy(() => import('./pages/Feed'));
+const WishlistPage = lazy(() => import('./pages/Wishlist'));
+const CreatePostPage = lazy(() => import('./pages/CreatePost'));
+const DiscoverUsersPage = lazy(() => import('./pages/DiscoverUsers'));
+const UserProfilePage = lazy(() => import('./pages/UserProfile'));
+const MisSeguidoresPage = lazy(() => import('./pages/MisSeguidores'));
+const SiguiendoPage = lazy(() => import('./pages/Siguiendo'));
 
-// Componente para rutas protegidas (requieren autenticación)
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+// Componente wrapper para páginas protegidas con layout
+function ProtectedPageWrapper({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
-  console.log('🔒 ProtectedRoute - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
+  console.log('🔒 ProtectedPageWrapper - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
 
   if (isLoading) {
     return (
@@ -30,12 +38,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    console.log('🚫 ProtectedRoute - Usuario no autenticado, redirigiendo a login');
+    console.log('🚫 ProtectedPageWrapper - Usuario no autenticado, redirigiendo a login');
     return <Navigate to="/iniciar-sesion" replace />;
   }
 
-  console.log('✅ ProtectedRoute - Usuario autenticado, mostrando contenido protegido');
-  return <>{children}</>;
+  console.log('✅ ProtectedPageWrapper - Usuario autenticado, mostrando contenido protegido');
+  return (
+    <HomePage>
+      {children}
+    </HomePage>
+  );
 }
 
 // Componente para rutas públicas (solo accesibles sin autenticación)
@@ -68,16 +80,18 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRouter() {
   const { loadUserFromToken } = useAuth();
 
-  // ✅ ARREGLO: Array vacío para ejecutar solo al montar el componente
   // Cargar usuario desde token al inicializar la app
   useEffect(() => {
     console.log('🚀 AppRouter montado - Ejecutando loadUserFromToken()');
     loadUserFromToken();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ✅ Array vacío - solo ejecutar una vez al montar
+  }, []); // Array vacío - solo ejecutar una vez al montar
 
   return (
     <BrowserRouter>
+    {/* Componente para manejar títulos automáticamente */}
+    <PageTitle />
+      
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center bg-gradient-rose">
           <div className="text-center">
@@ -87,53 +101,128 @@ function AppRouter() {
         </div>
       }>
         <Routes>
-          {/* RUTAS PROTEGIDAS - Solo si está autenticado */}
+          {/* RUTAS PROTEGIDAS CON LAYOUT - Cada ruta es independiente */}
+          
+          {/* Dashboard - Ruta principal */}
           <Route 
             path="/" 
             element={
-              <ProtectedRoute>
-                <HomePage />
-              </ProtectedRoute>
+              <ProtectedPageWrapper>
+                <DashboardPage />
+              </ProtectedPageWrapper>
             }
-          >
-            {/* RUTAS ANIDADAS DENTRO DEL HOME */}
-            
-            {/* Ruta por defecto - Dashboard */}
-            <Route index element={<DashboardPage />} />
-            
-            {/* Sección E-commerce */}
-            <Route path="productos" element={<ProductosPage />} />
-            <Route path="categorias" element={<div className="p-8"><h1 className="text-2xl font-bold">Categorías - Próximamente</h1></div>} />
-            <Route path="carrito" element={<CartPage />} />
-            <Route path="checkout" element={<CheckoutPage />} />
-            <Route path="mis-ordenes" element={<MisOrdenesPage />} />
-            <Route path="wishlist" element={<div className="p-8"><h1 className="text-2xl font-bold">Lista de Deseos - Próximamente</h1></div>} />
-            
-            {/* Sección Social */}
-            <Route path="feed" element={<FeedPage />} />
-            <Route path="crear-post" element={<div className="p-8"><h1 className="text-2xl font-bold">Crear Post - Próximamente</h1></div>} />
-            <Route path="mis-seguidores" element={<div className="p-8"><h1 className="text-2xl font-bold">Mis Seguidores - Próximamente</h1></div>} />
-            <Route path="siguiendo" element={<div className="p-8"><h1 className="text-2xl font-bold">Siguiendo - Próximamente</h1></div>} />
-            <Route path="descubrir" element={<div className="p-8"><h1 className="text-2xl font-bold">Descubrir - Próximamente</h1></div>} />
-            
-            {/* Sección Personal */}
-            <Route path="mi-perfil" element={<div className="p-8"><h1 className="text-2xl font-bold">Mi Perfil - Próximamente</h1></div>} />
-            <Route path="mis-direcciones" element={<div className="p-8"><h1 className="text-2xl font-bold">Mis Direcciones - Próximamente</h1></div>} />
-            <Route path="mis-reseñas" element={<div className="p-8"><h1 className="text-2xl font-bold">Mis Reseñas - Próximamente</h1></div>} />
-            <Route path="configuracion" element={<div className="p-8"><h1 className="text-2xl font-bold">Configuración - Próximamente</h1></div>} />
-            
-            {/* Sección Admin */}
-            <Route path="admin/analytics" element={<div className="p-8"><h1 className="text-2xl font-bold">Admin Analytics - Próximamente</h1></div>} />
-            <Route path="admin/usuarios" element={<div className="p-8"><h1 className="text-2xl font-bold">Admin Usuarios - Próximamente</h1></div>} />
-            <Route path="admin/productos" element={<div className="p-8"><h1 className="text-2xl font-bold">Admin Productos - Próximamente</h1></div>} />
-            <Route path="admin/ordenes" element={<div className="p-8"><h1 className="text-2xl font-bold">Admin Órdenes - Próximamente</h1></div>} />
-            <Route path="admin/moderacion" element={<div className="p-8"><h1 className="text-2xl font-bold">Admin Moderación - Próximamente</h1></div>} />
-            
-            {/* Sección Soporte */}
-            <Route path="notificaciones" element={<div className="p-8"><h1 className="text-2xl font-bold">Notificaciones - Próximamente</h1></div>} />
-            <Route path="ayuda" element={<div className="p-8"><h1 className="text-2xl font-bold">Ayuda - Próximamente</h1></div>} />
-            <Route path="contacto" element={<div className="p-8"><h1 className="text-2xl font-bold">Contacto - Próximamente</h1></div>} />
-          </Route>
+          />
+          
+          {/* Sección E-commerce */}
+          <Route 
+            path="/productos" 
+            element={
+              <ProtectedPageWrapper>
+                <ProductosPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/carrito" 
+            element={
+              <ProtectedPageWrapper>
+                <CartPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/checkout" 
+            element={
+              <ProtectedPageWrapper>
+                <CheckoutPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/mis-ordenes" 
+            element={
+              <ProtectedPageWrapper>
+                <MisOrdenesPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/wishlist" 
+            element={
+              <ProtectedPageWrapper>
+                <WishlistPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          {/* Sección Social */}
+          <Route 
+            path="/feed" 
+            element={
+              <ProtectedPageWrapper>
+                <FeedPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/crear-post" 
+            element={
+              <ProtectedPageWrapper>
+                <CreatePostPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/mis-seguidores" 
+            element={
+              <ProtectedPageWrapper>
+                <MisSeguidoresPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/siguiendo" 
+            element={
+              <ProtectedPageWrapper>
+                <SiguiendoPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/descubrir" 
+            element={
+              <ProtectedPageWrapper>
+                <DiscoverUsersPage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+        {/* Sección Personal */}
+        <Route 
+            path="/mi-perfil" 
+            element={
+              <ProtectedPageWrapper>
+                <UserProfilePage />
+              </ProtectedPageWrapper>
+            }
+          />
+          
+          <Route 
+            path="/perfil/:userId" 
+            element={
+              <ProtectedPageWrapper>
+                <UserProfilePage />
+              </ProtectedPageWrapper>
+            }
+          />
 
           {/* RUTAS PÚBLICAS - Solo si NO está autenticado */}
           <Route path="/iniciar-sesion" element={
